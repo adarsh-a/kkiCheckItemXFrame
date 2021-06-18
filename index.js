@@ -1,17 +1,9 @@
 const axios = require('axios');
 var config = require('./config/config');
 
-async function getItemDetail(domain,path,culture)
-{
-   
-    let hubId=getHubId(domain);
-    let libraryId=getLibraryId(culture);
-    let contentTypeQuery = getContentTypes(); 
-    let routesQuery= buildRoutesQuery(hubId,libraryId,contentTypeQuery);    
-
-    let xframeOption = "allow";
-
-    let result = await axios.get(routesQuery).then((response) => {
+async function getItemDetail(query,path)
+{    
+    let result = await axios.get(query).then((response) => {
         let items = response.data.documents;
         let numFound = response.data.numFound;
         if(numFound > 0)
@@ -22,34 +14,35 @@ async function getItemDetail(domain,path,culture)
               if(path == routePath)
               {
                   let id=items[i].id;
-                  return {code:"ok", data:id};
+                  return id;
               }
             }
         }
-        return{code:"fail"};
+        return '';
         
     }).catch(err => {
-        return {
-            code: "fail",
-            data: err
-        }
+        console.error('api request error1', err);
+        return '';
+    }); 
+   
+   return result;
+}
+
+async function getXFrameValue(query)
+{    
+    let itemData = await axios.get(query).then((response) => {
+            return response.data.elements.xFrameOption.value;
+    }).catch((error) => {
+            console.error('api request error1', error);
+            return '';
     });
     
-    if(result.code =="ok")
+    if(itemData!=='')
     {
-        let id=result.data;
-        let itemQuery = buildItemQuery(hubId, id);
-        let itemData = await axios.get(itemQuery).then((response) => {
-                return response.data.elements.xFrameOption.value;
-        }).catch((error) => {
-              console.error('api request error1', error);
-              return "allow";
-        });
-        
-        xframeOption = itemData;
+        return itemData;
     }
     
-    return xframeOption;
+    return 'allow';
     
 }
 
@@ -115,7 +108,8 @@ function buildRoutesQuery(hubId,libraryId,contentTypes)
     let baseQuery=config.baseQuery.replace('#hubId#',hubId);
     let searchQuery=config.searchQuery;
     let mainQuery = config.queryMain;
-    mainQuery=mainQuery.replace('#contenttypes#',contentTypes).replace('#libraryid#',libraryId);
+    mainQuery=mainQuery.replace('#contenttypes#',contentTypes)
+    .replace('#libraryid#',libraryId);
 
     let finalQuery=baseQuery+searchQuery+mainQuery;
     return finalQuery;
@@ -134,16 +128,27 @@ exports.handler = async (event, context, callback) => {
     
     let path = event.Records[0].cf.request.uri;
     let domain = event.Records[0].cf.request.origin.custom.domainName;
-    let itempath = path.substring(6); 
+    let itemPath = path.substring(6); 
     let culture = path.substring(1,6);    
     
-    let xframeOption = await getItemDetail(hubId,itempath,culture);
+    let hubId=getHubId(domain);
+    let libraryId=getLibraryId(culture);
+    let contentTypeQuery = getContentTypes();
+
+    let routesQuery= buildRoutesQuery(hubId,libraryId,contentTypeQuery);
+
+    let itemId = await getItemDetail(routesQuery,itemPath);   
+
+    let itemQuery = buildItemQuery(hubId, itemId);
+    let xFrameOption=await getXFrameValue(itemQuery);
 
     const response = event.Records[0].cf.response;
     const headers = response.headers;
+    
+    let xx='1; mode=block; id '+itemId+' itemQuery '+itemQuery +'xFrameOption '+xFrameOption;
    
-    headers['x-frame-options'] = [{key: 'X-Frame-Options', value: xframeOption}]; 
-    headers['x-xss-protection'] = [{key: 'X-XSS-Protection', value: '1; mode=block;'}]; 
+    headers['x-frame-options'] = [{key: 'X-Frame-Options', value: 'allow'}]; 
+    headers['x-xss-protection'] = [{key: 'X-XSS-Protection', value: xx}]; 
     headers['referrer-policy'] = [{key: 'Referrer-Policy', value: 'same-origin'}]; 
     
     //Return modified response

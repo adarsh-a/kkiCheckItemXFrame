@@ -9,10 +9,10 @@ config.hubs=[
 
 
 
-config.contentTypes=['Layout H - Content promo','Layout C - Main therapy page','Layout E - Article' ,
-'Layout D - Content list page','Layout D - Content list page','Layout G - Main Promo Page','Layout K - Generic page',
-'Layout - Veeva player page','Layout J - Main Promo Page Alternate','Layout - Content page','Layout - Pre-registration page',
-'Layout E - Dynamic article','Layout F - Dynamic content page','eDetailer Page'];
+config.contentTypes=['Layout+H+-+Content+promo','Layout C+-+Main+therapy+page','Layout+E+-+Article',
+'Layout+D+-+Content+list+page','Layout+D+-+Content+list+page','Layout+G+-+Main+Promo+Page','Layout+K+-+Generic+page',
+'Layout+-+Veeva+player+page','Layout+J+-+Main+Promo+Page+Alternate','Layout+-+Content+page','Layout+-+Pre-registration+page',
+'Layout+E+-+Dynamic+article','Layout+F+-+Dynamic+content+page','eDetailer+Page'];
 
 
 config.libraries = [
@@ -29,8 +29,8 @@ config.libraries = [
 
 config.baseQuery='https://content-eu-1.content-cms.com/api/#hubId#/delivery/v1/';
 config.searchQuery='search';
-config.getItemById='context/';
-config.queryMain ='?q=*:*&fl=name,string1,id,classification,type,status&fq=type:(#contenttypes#)&rows=10000&start=0&fq=libraryId:(#libraryid#)';
+config.getItemById='rendering/context/';
+config.queryMain ='?q=*:*&fl=name%2Cstring1%2Cid%2Cclassification%2Ctype%2Cstatus&fq=type%3A%28#contenttypes#%29&rows=10000&start=0&fq=libraryId%3A%28#libraryid#%29';
 
 
 
