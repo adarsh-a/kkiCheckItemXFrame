@@ -134,21 +134,16 @@ exports.handler = async (event, context, callback) => {
     let hubId=getHubId(domain);
     let libraryId=getLibraryId(culture);
     let contentTypeQuery = getContentTypes();
-
     let routesQuery= buildRoutesQuery(hubId,libraryId,contentTypeQuery);
-
-    let itemId = await getItemDetail(routesQuery,itemPath);   
-
+    let itemId = await getItemDetail(routesQuery,itemPath);  
     let itemQuery = buildItemQuery(hubId, itemId);
     let xFrameOption=await getXFrameValue(itemQuery);
-
+    
     const response = event.Records[0].cf.response;
     const headers = response.headers;
     
-    let xx='1; mode=block; id '+itemId+' itemQuery '+itemQuery +'xFrameOption '+xFrameOption;
-   
-    headers['x-frame-options'] = [{key: 'X-Frame-Options', value: 'allow'}]; 
-    headers['x-xss-protection'] = [{key: 'X-XSS-Protection', value: xx}]; 
+    headers['x-frame-options'] = [{key: 'X-Frame-Options', value: xFrameOption}]; 
+    headers['x-xss-protection'] = [{key: 'X-XSS-Protection', value: '1; mode=block;'}]; 
     headers['referrer-policy'] = [{key: 'Referrer-Policy', value: 'same-origin'}]; 
     
     //Return modified response
